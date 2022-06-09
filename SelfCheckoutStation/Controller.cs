@@ -21,31 +21,14 @@ namespace SelfCheckoutStation
         public void Run()
         {
             bool running = true;
+            Order order = new Order();
             while (running)
             {
-                Order order = new Order();
-                var run = CollectLineItems(order);
-                running = run.Success;
-
-                if (running)
-                {
-                    FinalizeOrder(order);
-                    _ui.Display(order.ToString());
-                }
-            }
-        }
-
-        public Response<Item> CollectLineItems(Order order)
-        {
-            bool collecting = true;
-            Response<Item> result = new Response<Item>();
-            while (collecting)
-            {
-                string input = _ui.GetString("Enter Price (or 0 to quit collecting, or Q to quit app)");
+                
+                string input = _ui.GetString("Enter Price (Press 0 to Finilize Order, or Q to quit app)");
                 if (input.ToUpper() == "Q")
                 {
-                    result.Success = false;
-                    return result;
+                    return;
                 }
 
                 decimal price;
@@ -57,11 +40,23 @@ namespace SelfCheckoutStation
 
                 if (price == 0)
                 {
-                    result.Success = true;
-                    return result;
+                    FinalizeOrder(order);
+                    _ui.Display(order.ToString());
+                    return;
                 }
-                
+
                 int quantity = _ui.GetInt("Enter Quantity");
+
+                var run = CollectLineItems(order, price, quantity);
+                
+            }
+        }
+
+        public Response<Item> CollectLineItems(Order order, decimal price, int quantity)
+        {
+            Response<Item> result = new Response<Item>();
+ 
+                
                 Item item = new Item();
                 item.Price = price;
                 item.Quantity = quantity;
@@ -71,13 +66,11 @@ namespace SelfCheckoutStation
                 
                 order.AddItem(item);
 
-            }
-
             result.Success = true;
             return result;
         }
 
-        private Response<Order> FinalizeOrder(Order order)
+        public Response<Order> FinalizeOrder(Order order)
         {
             Response<Order> result = new Response<Order>();
             decimal total = 0m;
